@@ -1,0 +1,19 @@
+# Intellij
+*.iml
+.idea
+
+# Local Files
+.DS_Store
+*.insyncdl
+
+# npm
+node_modules
+package-lock.json
+
+# build
+main.js
+*.js.map
+dist/*
+
+# obsidian
+data.json
