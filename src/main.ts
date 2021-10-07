@@ -16,8 +16,6 @@ export default class LinkConverterPlugin extends Plugin {
         await this.loadSettings();
         this.addSettingTab(new LinkConverterSettingsTab(this.app, this));
 
-        this.addStatusBarItem().setText('Status Bar Text');
-
         this.addCommand({
             id: 'convert-wikis-to-md-in-active-file',
             name: 'Active File: Convert WikiLinks to Markdown Links',
@@ -54,15 +52,12 @@ export default class LinkConverterPlugin extends Plugin {
             },
         });
 
-        this.registerEvent(
-            this.app.workspace.on('file-menu', (menu: Menu, file: TFile) => {
-                if (file instanceof TFile && file.extension === 'md') this.addFileMenuItems(menu, file);
-            })
-        );
+        if (this.settings.contextMenu) this.app.workspace.on('file-menu', this.addFileMenuItems);
     }
 
     onunload() {
         console.log('Link Converter Unloading...');
+        this.app.workspace.off('file-menu', this.addFileMenuItems);
     }
 
     async loadSettings() {
@@ -74,6 +69,8 @@ export default class LinkConverterPlugin extends Plugin {
     }
 
     addFileMenuItems = (menu: Menu, file: TFile) => {
+        if (!(file instanceof TFile && file.extension === 'md')) return;
+
         menu.addSeparator();
 
         menu.addItem((item) => {
