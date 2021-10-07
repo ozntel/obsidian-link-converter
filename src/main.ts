@@ -84,5 +84,7 @@ export default class LinkConverterPlugin extends Plugin {
                 .setIcon('markdownIcon')
                 .onClick(() => convertLinksAndSaveInSingleFile(file, this.app, 'markdown'));
         });
+
+        menu.addSeparator();
     };
 }

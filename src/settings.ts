@@ -42,5 +42,15 @@ export class LinkConverterSettingsTab extends PluginSettingTab {
                     }
                 });
             });
+
+        const coffeeDiv = containerEl.createDiv('coffee');
+        coffeeDiv.addClass('oz-coffee-div');
+        const coffeeLink = coffeeDiv.createEl('a', { href: 'https://ko-fi.com/L3L356V6Q' });
+        const coffeeImg = coffeeLink.createEl('img', {
+            attr: {
+                src: 'https://cdn.ko-fi.com/cdn/kofi2.png?v=3',
+            },
+        });
+        coffeeImg.height = 45;
     }
 }
