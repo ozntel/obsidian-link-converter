@@ -20,7 +20,7 @@ export default class LinkConverterPlugin extends Plugin {
             id: 'convert-wikis-to-md-in-active-file',
             name: 'Active File: Links to Markdown',
             callback: () => {
-                convertLinksInActiveFile(this.app, 'markdown');
+                convertLinksInActiveFile(this, 'markdown');
             },
         });
 
@@ -28,7 +28,7 @@ export default class LinkConverterPlugin extends Plugin {
             id: 'convert-md-to-wikis-in-active-file',
             name: 'Active File: Links to Wiki',
             callback: () => {
-                convertLinksInActiveFile(this.app, 'wiki');
+                convertLinksInActiveFile(this, 'wiki');
             },
         });
 
@@ -37,7 +37,7 @@ export default class LinkConverterPlugin extends Plugin {
             name: 'Vault: Links to Markdown',
             callback: () => {
                 let infoText = 'Are you sure you want to convert all Wikilinks to Markdown Links?';
-                let modal = new ConfirmationModal(this.app, infoText, () => convertLinksInVault(this.app, 'markdown'));
+                let modal = new ConfirmationModal(this.app, infoText, () => convertLinksInVault(this, 'markdown'));
                 modal.open();
             },
         });
@@ -47,7 +47,7 @@ export default class LinkConverterPlugin extends Plugin {
             name: 'Vault: Links to Wiki',
             callback: () => {
                 let infoText = 'Are you sure you want to convert all Markdown Links to Wikilinks?';
-                let modal = new ConfirmationModal(this.app, infoText, () => convertLinksInVault(this.app, 'wiki'));
+                let modal = new ConfirmationModal(this.app, infoText, () => convertLinksInVault(this, 'wiki'));
                 modal.open();
             },
         });
@@ -76,13 +76,13 @@ export default class LinkConverterPlugin extends Plugin {
         menu.addItem((item) => {
             item.setTitle('Links to Wiki')
                 .setIcon('bracketIcon')
-                .onClick(() => convertLinksAndSaveInSingleFile(file, this.app, 'wiki'));
+                .onClick(() => convertLinksAndSaveInSingleFile(file, this, 'wiki'));
         });
 
         menu.addItem((item) => {
             item.setTitle('Links to Markdown')
                 .setIcon('markdownIcon')
-                .onClick(() => convertLinksAndSaveInSingleFile(file, this.app, 'markdown'));
+                .onClick(() => convertLinksAndSaveInSingleFile(file, this, 'markdown'));
         });
 
         menu.addSeparator();

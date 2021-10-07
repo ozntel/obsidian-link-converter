@@ -1,14 +1,18 @@
 import { App, PluginSettingTab, Setting, Menu, TFile } from 'obsidian';
 import LinkConverterPlugin from './main';
 
+type finalLinkFormat = 'not-change' | 'relative-path' | 'absolute-path';
+
 export interface LinkConverterPluginSettings {
     mySetting: string;
     contextMenu: boolean;
+    finalLinkFormat: finalLinkFormat;
 }
 
 export const DEFAULT_SETTINGS: LinkConverterPluginSettings = {
     mySetting: 'default',
     contextMenu: true,
+    finalLinkFormat: 'not-change',
 };
 
 export class LinkConverterSettingsTab extends PluginSettingTab {
@@ -41,6 +45,23 @@ export class LinkConverterSettingsTab extends PluginSettingTab {
                         this.plugin.app.workspace.off('file-menu', this.plugin.addFileMenuItems);
                     }
                 });
+            });
+
+        new Setting(containerEl)
+            .setName('Converted Link Format')
+            .setDesc(
+                'Select the preferred option for the final link format after the conversion. Plugin will use the preferrence where possible'
+            )
+            .addDropdown((dropdown) => {
+                dropdown
+                    .addOption('not-change', 'Do not change')
+                    .addOption('relative-path', 'Relative Path')
+                    .addOption('absolute-path', 'Absolute Path')
+                    .setValue(this.plugin.settings.finalLinkFormat)
+                    .onChange((option: finalLinkFormat) => {
+                        this.plugin.settings.finalLinkFormat = option;
+                        this.plugin.saveSettings();
+                    });
             });
 
         const coffeeDiv = containerEl.createDiv('coffee');
