@@ -4,6 +4,8 @@
 
 This plugin helps you to scan all your links in the vault and convert them to `WikiLinks` or `Markdown` format.
 
+### Commands
+
 Once the plugin is loaded, 4 different commands are added to the available commands:
 
 1. Convert all links in your `Vault`:
@@ -16,6 +18,8 @@ Once the plugin is loaded, 4 different commands are added to the available comma
     - To `Markdown` Format
     - To `WikiLinks` Format
 
+### Context Menu
+
 <img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/available-commands.png" width="450"></img>
 
 Additionally, the plugin adds Link converter option to the `Context Menu` of `Markdown Files`:
@@ -23,6 +27,12 @@ Additionally, the plugin adds Link converter option to the `Context Menu` of `Ma
 <img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/context-menu.png" width="450"></img>
 
 In case you don't want `Context Menu` items, you can simply turn them off from the plugin settings.
+
+### Final Link Format
+
+You can also select the final format of the conversions as either "Relative Path" or "Absolute Path". Or you can simply select "Do not Change" to not make any changes to the final link formats.
+
+<img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/final-link-settings.png"></img>
 
 ## 📕 Contact
 
