@@ -47,16 +47,12 @@ export const convertWikiLinksToMarkdown = (md: string, sourceFile: TFile, plugin
             let fileMatch = wiki.match(fileRegex);
             if (fileMatch) {
                 let altMatch = wiki.match(altRegex);
-                let mdLink = createMarkdownLink(fileMatch[0], altMatch ? altMatch[0] : '', sourceFile, plugin);
+                let mdLink = createLink('markdown', fileMatch[0], altMatch ? altMatch[0] : '', sourceFile, plugin);
                 newMdText = newMdText.replace(wiki, mdLink);
             }
         }
     }
     return newMdText;
-};
-
-const createMarkdownLink = (link: string, alt: string, sourceFile: TFile, plugin: LinkConverterPlugin) => {
-    return `[${alt}](${encodeURI(link)})`;
 };
 
 // --> Converts links within given string from MD to Wiki
@@ -73,7 +69,7 @@ const convertMarkdownLinksToWikiLinks = (md: string, sourceFile: TFile, plugin: 
                 // Web links should stay with Markdown Format
                 if (fileMatch[0].startsWith('http')) continue;
                 let altMatch = mdLink.match(altRegex);
-                let wikiLink = createWikiLink(fileMatch[0], altMatch ? altMatch[0] : undefined, sourceFile, plugin);
+                let wikiLink = createLink('wiki', fileMatch[0], altMatch ? altMatch[0] : undefined, sourceFile, plugin);
                 newMdText = newMdText.replace(mdLink, wikiLink);
             }
         }
@@ -81,8 +77,26 @@ const convertMarkdownLinksToWikiLinks = (md: string, sourceFile: TFile, plugin: 
     return newMdText;
 };
 
-const createWikiLink = (link: string, alt: string, sourceFile: TFile, plugin: LinkConverterPlugin) => {
-    return `[[${decodeURI(link)}${alt && alt !== '' ? '|' + alt : ''}]]`;
+const createLink = (dest: 'markdown' | 'wiki', originalLink: string, alt: string, sourceFile: TFile, plugin: LinkConverterPlugin) => {
+    let finalLink = originalLink;
+
+    if (plugin.settings.finalLinkFormat !== 'not-change') {
+        let fileLink = decodeURI(finalLink);
+        let file = plugin.app.metadataCache.getFirstLinkpathDest(fileLink, sourceFile.path);
+        if (file) {
+            if (plugin.settings.finalLinkFormat === 'absolute-path') {
+                finalLink = file.path;
+            } else if (plugin.settings.finalLinkFormat === 'relative-path') {
+                finalLink = getRelativeLink(sourceFile.path, file.path);
+            }
+        }
+    }
+
+    if (dest === 'wiki') {
+        return `[[${decodeURI(finalLink)}${alt && alt !== '' ? '|' + alt : ''}]]`;
+    } else if (dest === 'markdown') {
+        return `[${alt}](${encodeURI(finalLink)})`;
+    }
 };
 
 /**
@@ -91,7 +105,7 @@ const createWikiLink = (link: string, alt: string, sourceFile: TFile, plugin: Li
  * @param linkedFilePath File path, which will be referred in the source file
  * @returns
  */
-function createRelativeLink(sourceFilePath: string, linkedFilePath: string) {
+function getRelativeLink(sourceFilePath: string, linkedFilePath: string) {
     function trim(arr: string[]) {
         let start = 0;
         for (; start < arr.length; start++) {
