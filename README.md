@@ -16,6 +16,8 @@ Once the plugin is loaded, 4 different commands are added to the available comma
     a. To `Markdown` Format
     b. To `WikiLinks` Format
 
+<img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/available-commands.png" width="450"></img>
+
 Additionally, the plugin adds Link converter option to the `Context Menu` of `Markdown Files`:
 
 <img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/context-menu.png" width="450"></img>
