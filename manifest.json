@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-link-converter",
-	"name": "Obsidian Link Converter",
-	"version": "1.0.1",
-	"minAppVersion": "0.9.12",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Ozan Tellioglu",
-	"authorUrl": "https://ozan.pl",
-	"isDesktopOnly": false
+    "id": "obsidian-link-converter",
+    "name": "Obsidian Link Converter",
+    "version": "0.0.0",
+    "minAppVersion": "0.9.12",
+    "description": "Scan all your links in the vault and convert them to your desired format.",
+    "author": "Ozan Tellioglu",
+    "authorUrl": "https://ozan.pl",
+    "isDesktopOnly": false
 }
