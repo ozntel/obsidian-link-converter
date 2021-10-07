@@ -18,7 +18,7 @@ export default class LinkConverterPlugin extends Plugin {
 
         this.addCommand({
             id: 'convert-wikis-to-md-in-active-file',
-            name: 'Active File: Convert WikiLinks to Markdown Links',
+            name: 'Active File: Links to Markdown',
             callback: () => {
                 convertLinksInActiveFile(this.app, 'markdown');
             },
@@ -26,7 +26,7 @@ export default class LinkConverterPlugin extends Plugin {
 
         this.addCommand({
             id: 'convert-md-to-wikis-in-active-file',
-            name: 'Active File: Convert Markdown Links to WikiLinks',
+            name: 'Active File: Links to Wiki',
             callback: () => {
                 convertLinksInActiveFile(this.app, 'wiki');
             },
@@ -34,7 +34,7 @@ export default class LinkConverterPlugin extends Plugin {
 
         this.addCommand({
             id: 'convert-wikis-to-md-in-vault',
-            name: 'Vault: Convert WikiLinks to Markdown Links',
+            name: 'Vault: Links to Markdown',
             callback: () => {
                 let infoText = 'Are you sure you want to convert all Wikilinks to Markdown Links?';
                 let modal = new ConfirmationModal(this.app, infoText, () => convertLinksInVault(this.app, 'markdown'));
@@ -44,7 +44,7 @@ export default class LinkConverterPlugin extends Plugin {
 
         this.addCommand({
             id: 'convert-mdlinks-to-wiki-in-vault',
-            name: 'Vault: Convert Markdown Links to WikiLinks',
+            name: 'Vault: Links to Wiki',
             callback: () => {
                 let infoText = 'Are you sure you want to convert all Markdown Links to Wikilinks?';
                 let modal = new ConfirmationModal(this.app, infoText, () => convertLinksInVault(this.app, 'wiki'));
