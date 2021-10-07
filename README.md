@@ -8,13 +8,13 @@ Once the plugin is loaded, 4 different commands are added to the available comma
 
 1. Convert all links in your `Vault`:
 
-    a. To `Markdown` Format
-    b. To `WikiLinks` Format
+    - To `Markdown` Format
+    - To `WikiLinks` Format
 
 2. Convert only links in `Active File`:
 
-    a. To `Markdown` Format
-    b. To `WikiLinks` Format
+    - To `Markdown` Format
+    - To `WikiLinks` Format
 
 <img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/available-commands.png" width="450"></img>
 
