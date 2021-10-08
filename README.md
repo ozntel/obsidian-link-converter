@@ -32,7 +32,7 @@ In case you don't want `Context Menu` items, you can simply turn them off from t
 
 You can also select the final format of the conversions as either "Relative Path" or "Absolute Path". Or you can simply select "Do not Change" to not make any changes to the final link formats.
 
-<img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/final-link-settings.png"></img>
+<img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/final-link-settings.png" width="500"></img>
 
 ## 📕 Contact
 
