@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting, Menu, TFile } from 'obsidian';
 import LinkConverterPlugin from './main';
 
-type finalLinkFormat = 'not-change' | 'relative-path' | 'absolute-path';
+type finalLinkFormat = 'not-change' | 'relative-path' | 'absolute-path' | 'shortest-path';
 
 export interface LinkConverterPluginSettings {
     mySetting: string;
@@ -32,9 +32,7 @@ export class LinkConverterSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('File Context Menu')
-            .setDesc(
-                "Turn this option off if you don't want single file commands to appear within the file context menu"
-            )
+            .setDesc("Turn this option off if you don't want single file commands to appear within the file context menu")
             .addToggle((toggle) => {
                 toggle.setValue(this.plugin.settings.contextMenu).onChange((newVal) => {
                     this.plugin.settings.contextMenu = newVal;
@@ -49,14 +47,13 @@ export class LinkConverterSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Converted Link Format')
-            .setDesc(
-                'Select the preferred option for the final link format after the conversion. Plugin will use the preferrence where possible'
-            )
+            .setDesc('Select the preferred option for the final link format after the conversion. Plugin will use the preferrence where possible')
             .addDropdown((dropdown) => {
                 dropdown
                     .addOption('not-change', 'Do not change')
                     .addOption('relative-path', 'Relative Path')
                     .addOption('absolute-path', 'Absolute Path')
+                    .addOption('shortest-path', 'Shortest Path')
                     .setValue(this.plugin.settings.finalLinkFormat)
                     .onChange((option: finalLinkFormat) => {
                         this.plugin.settings.finalLinkFormat = option;

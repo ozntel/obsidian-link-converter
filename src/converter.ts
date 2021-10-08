@@ -3,6 +3,8 @@ import { App, TFile, normalizePath } from 'obsidian';
 
 /* -------------------- LINK DETECTOR -------------------- */
 
+type FinalFormat = 'relative-path' | 'absolute-path' | 'shortest-path';
+
 interface LinkMatch {
     type: 'markdown' | 'wiki';
     match: string;
@@ -77,9 +79,7 @@ export const convertLinksAndSaveInSingleFile = async (mdFile: TFile, plugin: Lin
     let normalizedPath = normalizePath(mdFile.path);
     let fileText = await plugin.app.vault.adapter.read(normalizedPath);
     let newFileText =
-        finalFormat === 'markdown'
-            ? await convertWikiLinksToMarkdown(fileText, mdFile, plugin)
-            : await convertMarkdownLinksToWikiLinks(fileText, mdFile, plugin);
+        finalFormat === 'markdown' ? await convertWikiLinksToMarkdown(fileText, mdFile, plugin) : await convertMarkdownLinksToWikiLinks(fileText, mdFile, plugin);
     await plugin.app.vault.adapter.write(normalizedPath, newFileText);
 };
 
@@ -134,6 +134,42 @@ const convertMarkdownLinksToWikiLinks = async (md: string, sourceFile: TFile, pl
     return newMdText;
 };
 
+/* -------------------- LINKS TO RELATIVE/ABSOLUTE/SHORTEST -------------------- */
+
+export const convertLinksInFileToPreferredFormat = async (mdFile: TFile, plugin: LinkConverterPlugin, finalFormat: FinalFormat) => {
+    let normalizedPath = normalizePath(mdFile.path);
+    let fileText = await plugin.app.vault.adapter.read(normalizedPath);
+    let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(mdFile, plugin);
+    for (let linkMatch of linkMatches) {
+        let fileLink = decodeURI(linkMatch.linkText);
+        let file = plugin.app.metadataCache.getFirstLinkpathDest(fileLink, linkMatch.sourceFilePath);
+        if (file) {
+            fileLink = getFileLinkInFormat(file, mdFile, plugin, finalFormat);
+            fileText = fileText.replace(linkMatch.match, createLink(linkMatch.type, fileLink, linkMatch.altText, mdFile, plugin));
+        }
+    }
+    await plugin.app.vault.adapter.write(normalizedPath, fileText);
+};
+
+const getFileLinkInFormat = (file: TFile, sourceFile: TFile, plugin: LinkConverterPlugin, finalFormat: FinalFormat): string => {
+    let fileLink: string;
+    if (finalFormat === 'absolute-path') {
+        fileLink = file.path;
+    } else if (finalFormat === 'relative-path') {
+        fileLink = getRelativeLink(sourceFile.path, file.path);
+    } else if (finalFormat === 'shortest-path') {
+        let allFilesInVault = plugin.app.vault.getFiles();
+        let filesWithSameName = allFilesInVault.filter((f) => f.name === file.name);
+        if (filesWithSameName.length > 1) {
+            fileLink = file.path;
+        } else {
+            fileLink = file.name;
+        }
+    }
+    if (fileLink.endsWith('.md')) fileLink = fileLink.replace('.md', '');
+    return fileLink;
+};
+
 /* -------------------- HELPERS -------------------- */
 
 const createLink = (dest: 'markdown' | 'wiki', originalLink: string, alt: string, sourceFile: TFile, plugin: LinkConverterPlugin) => {
@@ -142,13 +178,7 @@ const createLink = (dest: 'markdown' | 'wiki', originalLink: string, alt: string
     if (plugin.settings.finalLinkFormat !== 'not-change') {
         let fileLink = decodeURI(finalLink);
         let file = plugin.app.metadataCache.getFirstLinkpathDest(fileLink, sourceFile.path);
-        if (file) {
-            if (plugin.settings.finalLinkFormat === 'absolute-path') {
-                finalLink = file.path;
-            } else if (plugin.settings.finalLinkFormat === 'relative-path') {
-                finalLink = getRelativeLink(sourceFile.path, file.path);
-            }
-        }
+        if (file) finalLink = getFileLinkInFormat(file, sourceFile, plugin, plugin.settings.finalLinkFormat);
     }
 
     if (dest === 'wiki') {

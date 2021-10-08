@@ -1,7 +1,7 @@
 import { Menu, Plugin, TFile, addIcon } from 'obsidian';
 import { LinkConverterSettingsTab, LinkConverterPluginSettings, DEFAULT_SETTINGS } from './settings';
 import { ConfirmationModal } from 'modals';
-import { convertLinksInActiveFile, convertLinksInVault, convertLinksAndSaveInSingleFile } from 'converter';
+import * as Converter from 'converter';
 import * as Icons from './icons';
 
 export default class LinkConverterPlugin extends Plugin {
@@ -20,7 +20,7 @@ export default class LinkConverterPlugin extends Plugin {
             id: 'convert-wikis-to-md-in-active-file',
             name: 'Active File: Links to Markdown',
             callback: () => {
-                convertLinksInActiveFile(this, 'markdown');
+                Converter.convertLinksInActiveFile(this, 'markdown');
             },
         });
 
@@ -28,7 +28,7 @@ export default class LinkConverterPlugin extends Plugin {
             id: 'convert-md-to-wikis-in-active-file',
             name: 'Active File: Links to Wiki',
             callback: () => {
-                convertLinksInActiveFile(this, 'wiki');
+                Converter.convertLinksInActiveFile(this, 'wiki');
             },
         });
 
@@ -37,7 +37,7 @@ export default class LinkConverterPlugin extends Plugin {
             name: 'Vault: Links to Markdown',
             callback: () => {
                 let infoText = 'Are you sure you want to convert all Wikilinks to Markdown Links?';
-                let modal = new ConfirmationModal(this.app, infoText, () => convertLinksInVault(this, 'markdown'));
+                let modal = new ConfirmationModal(this.app, infoText, () => Converter.convertLinksInVault(this, 'markdown'));
                 modal.open();
             },
         });
@@ -47,7 +47,7 @@ export default class LinkConverterPlugin extends Plugin {
             name: 'Vault: Links to Wiki',
             callback: () => {
                 let infoText = 'Are you sure you want to convert all Markdown Links to Wikilinks?';
-                let modal = new ConfirmationModal(this.app, infoText, () => convertLinksInVault(this, 'wiki'));
+                let modal = new ConfirmationModal(this.app, infoText, () => Converter.convertLinksInVault(this, 'wiki'));
                 modal.open();
             },
         });
@@ -76,14 +76,23 @@ export default class LinkConverterPlugin extends Plugin {
         menu.addItem((item) => {
             item.setTitle('Links to Wiki')
                 .setIcon('bracketIcon')
-                .onClick(() => convertLinksAndSaveInSingleFile(file, this, 'wiki'));
+                .onClick(() => Converter.convertLinksAndSaveInSingleFile(file, this, 'wiki'));
         });
 
         menu.addItem((item) => {
             item.setTitle('Links to Markdown')
                 .setIcon('markdownIcon')
-                .onClick(() => convertLinksAndSaveInSingleFile(file, this, 'markdown'));
+                .onClick(() => Converter.convertLinksAndSaveInSingleFile(file, this, 'markdown'));
         });
+
+        if (this.settings.finalLinkFormat !== 'not-change') {
+            let finalFormat = this.settings.finalLinkFormat;
+            menu.addItem((item) => {
+                item.setTitle(`Links to ${finalFormat === 'absolute-path' ? 'Absolute Path' : finalFormat === 'shortest-path' ? 'Shortest Path' : 'Relative Path'}`)
+                    .setIcon('bracketIcon')
+                    .onClick(() => Converter.convertLinksInFileToPreferredFormat(file, this, finalFormat));
+            });
+        }
 
         menu.addSeparator();
     };
