@@ -1,14 +1,85 @@
 import LinkConverterPlugin from 'main';
 import { App, TFile, normalizePath } from 'obsidian';
 
+/* -------------------- LINK DETECTOR -------------------- */
+
+interface LinkMatch {
+    type: 'markdown' | 'wiki';
+    match: string;
+    linkText: string;
+    altText: string;
+    sourceFilePath: string;
+}
+
+const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugin): Promise<LinkMatch[]> => {
+    const linkMatches: LinkMatch[] = [];
+    let normalizedPath = normalizePath(mdFile.path);
+    let fileText = await plugin.app.vault.adapter.read(normalizedPath);
+
+    // --> Get All WikiLinks
+    let wikiRegex = /\[\[.*?\]\]/g;
+    let wikiMatches = fileText.match(wikiRegex);
+
+    if (wikiMatches) {
+        let fileRegex = /(?<=\[\[).*?(?=(\]|\|))/;
+        let altRegex = /(?<=\|).*(?=]])/;
+
+        for (let wikiMatch of wikiMatches) {
+            let fileMatch = wikiMatch.match(fileRegex);
+            if (fileMatch) {
+                // Web links are to be skipped
+                if (fileMatch[0].startsWith('http')) continue;
+                let altMatch = wikiMatch.match(altRegex);
+                let linkMatch: LinkMatch = {
+                    type: 'wiki',
+                    match: wikiMatch,
+                    linkText: fileMatch[0],
+                    altText: altMatch ? altMatch[0] : '',
+                    sourceFilePath: mdFile.path,
+                };
+                linkMatches.push(linkMatch);
+            }
+        }
+    }
+
+    // --> Get All Markdown Links
+    let markdownRegex = /\[(^$|.*?)\]\((.*?)\)/g;
+    let markdownMatches = fileText.match(markdownRegex);
+
+    if (markdownMatches) {
+        let fileRegex = /(?<=\().*(?=\))/;
+        let altRegex = /(?<=\[)(^$|.*?)(?=\])/;
+        for (let markdownMatch of markdownMatches) {
+            let fileMatch = markdownMatch.match(fileRegex);
+            if (fileMatch) {
+                // Web links are to be skipped
+                if (fileMatch[0].startsWith('http')) continue;
+                let altMatch = markdownMatch.match(altRegex);
+                let linkMatch: LinkMatch = {
+                    type: 'markdown',
+                    match: markdownMatch,
+                    linkText: fileMatch[0],
+                    altText: altMatch ? altMatch[0] : '',
+                    sourceFilePath: mdFile.path,
+                };
+                linkMatches.push(linkMatch);
+            }
+        }
+    }
+
+    return linkMatches;
+};
+
+/* -------------------- CONVERTERS -------------------- */
+
 // --> Converts single file to provided final format and save back in the file
 export const convertLinksAndSaveInSingleFile = async (mdFile: TFile, plugin: LinkConverterPlugin, finalFormat: 'markdown' | 'wiki') => {
     let normalizedPath = normalizePath(mdFile.path);
     let fileText = await plugin.app.vault.adapter.read(normalizedPath);
     let newFileText =
         finalFormat === 'markdown'
-            ? convertWikiLinksToMarkdown(fileText, mdFile, plugin)
-            : convertMarkdownLinksToWikiLinks(fileText, mdFile, plugin);
+            ? await convertWikiLinksToMarkdown(fileText, mdFile, plugin)
+            : await convertMarkdownLinksToWikiLinks(fileText, mdFile, plugin);
     await plugin.app.vault.adapter.write(normalizedPath, newFileText);
 };
 
@@ -35,47 +106,35 @@ const hasFrontmatter = (app: App, filePath: string, keyToCheck: string) => {
     return metaCache.frontmatter && metaCache.frontmatter[keyToCheck];
 };
 
+/* -------------------- LINKS TO MARKDOWN CONVERTER -------------------- */
+
 // --> Converts links within given string from Wiki to MD
-export const convertWikiLinksToMarkdown = (md: string, sourceFile: TFile, plugin: LinkConverterPlugin): string => {
+export const convertWikiLinksToMarkdown = async (md: string, sourceFile: TFile, plugin: LinkConverterPlugin): Promise<string> => {
     let newMdText = md;
-    let wikiRegex = /\[\[.*?\]\]/g;
-    let matches = newMdText.match(wikiRegex);
-    if (matches) {
-        let fileRegex = /(?<=\[\[).*?(?=(\]|\|))/;
-        let altRegex = /(?<=\|).*(?=]])/;
-        for (let wiki of matches) {
-            let fileMatch = wiki.match(fileRegex);
-            if (fileMatch) {
-                let altMatch = wiki.match(altRegex);
-                let mdLink = createLink('markdown', fileMatch[0], altMatch ? altMatch[0] : '', sourceFile, plugin);
-                newMdText = newMdText.replace(wiki, mdLink);
-            }
-        }
+    let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(sourceFile, plugin);
+    let wikiMatches = linkMatches.filter((match) => match.type === 'wiki');
+    for (let wikiMatch of wikiMatches) {
+        let mdLink = createLink('markdown', wikiMatch.linkText, wikiMatch.altText, sourceFile, plugin);
+        newMdText = newMdText.replace(wikiMatch.match, mdLink);
     }
     return newMdText;
 };
 
+/* -------------------- LINKS TO WIKI CONVERTER -------------------- */
+
 // --> Converts links within given string from MD to Wiki
-const convertMarkdownLinksToWikiLinks = (md: string, sourceFile: TFile, plugin: LinkConverterPlugin): string => {
+const convertMarkdownLinksToWikiLinks = async (md: string, sourceFile: TFile, plugin: LinkConverterPlugin): Promise<string> => {
     let newMdText = md;
-    let mdLinkRegex = /\[(^$|.*?)\]\((.*?)\)/g;
-    let matches = newMdText.match(mdLinkRegex);
-    if (matches) {
-        let fileRegex = /(?<=\().*(?=\))/;
-        let altRegex = /(?<=\[)(^$|.*?)(?=\])/;
-        for (let mdLink of matches) {
-            let fileMatch = mdLink.match(fileRegex);
-            if (fileMatch) {
-                // Web links should stay with Markdown Format
-                if (fileMatch[0].startsWith('http')) continue;
-                let altMatch = mdLink.match(altRegex);
-                let wikiLink = createLink('wiki', fileMatch[0], altMatch ? altMatch[0] : undefined, sourceFile, plugin);
-                newMdText = newMdText.replace(mdLink, wikiLink);
-            }
-        }
+    let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(sourceFile, plugin);
+    let markdownMatches = linkMatches.filter((match) => match.type === 'markdown');
+    for (let markdownMatch of markdownMatches) {
+        let mdLink = createLink('wiki', markdownMatch.linkText, markdownMatch.altText, sourceFile, plugin);
+        newMdText = newMdText.replace(markdownMatch.match, mdLink);
     }
     return newMdText;
 };
+
+/* -------------------- HELPERS -------------------- */
 
 const createLink = (dest: 'markdown' | 'wiki', originalLink: string, alt: string, sourceFile: TFile, plugin: LinkConverterPlugin) => {
     let finalLink = originalLink;
