@@ -24,9 +24,11 @@ Once the plugin is loaded, 4 different commands are added to the available comma
 
 Additionally, the plugin adds Link converter option to the `Context Menu` of `Markdown Files`:
 
-<img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/context-menu.png" width="450"></img>
+<img src="https://raw.githubusercontent.com/ozntel/obsidian-link-converter/main/images/context-menu.png" width="200"></img>
 
 In case you don't want `Context Menu` items, you can simply turn them off from the plugin settings.
+
+The Context Menu item to convert all links to Shortest, Relative or Absolute path appears depending on plugin settings. Make sure that you adjust the settings depending on your preferences.
 
 ### Final Link Format
 

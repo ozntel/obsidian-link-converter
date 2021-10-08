@@ -12,6 +12,7 @@ export default class LinkConverterPlugin extends Plugin {
 
         addIcon('bracketIcon', Icons.BRACKET_ICON);
         addIcon('markdownIcon', Icons.MARKDOWN_ICON);
+        addIcon('linkEditIcon', Icons.LINK_EDIT_ICON);
 
         await this.loadSettings();
         this.addSettingTab(new LinkConverterSettingsTab(this.app, this));
@@ -74,13 +75,13 @@ export default class LinkConverterPlugin extends Plugin {
         menu.addSeparator();
 
         menu.addItem((item) => {
-            item.setTitle('Links to Wiki')
+            item.setTitle('Markdown Links to Wiki')
                 .setIcon('bracketIcon')
                 .onClick(() => Converter.convertLinksAndSaveInSingleFile(file, this, 'wiki'));
         });
 
         menu.addItem((item) => {
-            item.setTitle('Links to Markdown')
+            item.setTitle('WikiLinks to Markdown')
                 .setIcon('markdownIcon')
                 .onClick(() => Converter.convertLinksAndSaveInSingleFile(file, this, 'markdown'));
         });
@@ -88,8 +89,8 @@ export default class LinkConverterPlugin extends Plugin {
         if (this.settings.finalLinkFormat !== 'not-change') {
             let finalFormat = this.settings.finalLinkFormat;
             menu.addItem((item) => {
-                item.setTitle(`Links to ${finalFormat === 'absolute-path' ? 'Absolute Path' : finalFormat === 'shortest-path' ? 'Shortest Path' : 'Relative Path'}`)
-                    .setIcon('bracketIcon')
+                item.setTitle(`All Links to ${finalFormat === 'absolute-path' ? 'Absolute Path' : finalFormat === 'shortest-path' ? 'Shortest Path' : 'Relative Path'}`)
+                    .setIcon('linkEditIcon')
                     .onClick(() => Converter.convertLinksInFileToPreferredFormat(file, this, finalFormat));
             });
         }
