@@ -80,7 +80,8 @@ export const convertLinksAndSaveInSingleFile = async (mdFile: TFile, plugin: Lin
     let fileText = await plugin.app.vault.adapter.read(normalizedPath);
     let newFileText =
         finalFormat === 'markdown' ? await convertWikiLinksToMarkdown(fileText, mdFile, plugin) : await convertMarkdownLinksToWikiLinks(fileText, mdFile, plugin);
-    await plugin.app.vault.adapter.write(normalizedPath, newFileText);
+    let metadata = await plugin.app.vault.adapter.stat(normalizedPath)    
+    await plugin.app.vault.adapter.write(normalizedPath, newFileText, metadata);
 };
 
 // --> Command Function: Converts All Links and Saves in Current Active File
@@ -148,7 +149,8 @@ export const convertLinksInFileToPreferredFormat = async (mdFile: TFile, plugin:
             fileText = fileText.replace(linkMatch.match, createLink(linkMatch.type, fileLink, linkMatch.altText, mdFile, plugin));
         }
     }
-    await plugin.app.vault.adapter.write(normalizedPath, fileText);
+    let metadata = await plugin.app.vault.adapter.stat(normalizedPath)
+    await plugin.app.vault.adapter.write(normalizedPath, fileText, metadata);
 };
 
 const getFileLinkInFormat = (file: TFile, sourceFile: TFile, plugin: LinkConverterPlugin, finalFormat: FinalFormat): string => {
