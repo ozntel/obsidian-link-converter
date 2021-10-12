@@ -1,5 +1,5 @@
 import LinkConverterPlugin from 'main';
-import { App, TFile, normalizePath } from 'obsidian';
+import { App, TFile, normalizePath, Notice } from 'obsidian';
 
 /* -------------------- LINK DETECTOR -------------------- */
 
@@ -133,6 +133,7 @@ export const convertLinksInVault = async (plugin: LinkConverterPlugin, finalForm
         }
         await convertLinksAndSaveInSingleFile(mdFile, plugin, finalFormat);
     }
+    new Notice('Conversion for all links in your vault finished.');
 };
 
 const hasFrontmatter = (app: App, filePath: string, keyToCheck: string) => {
@@ -220,7 +221,7 @@ const getFileLinkInFormat = (file: TFile, sourceFile: TFile, plugin: LinkConvert
 
 /* -------------------- HELPERS -------------------- */
 
-const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string, sourceFile: TFile, plugin: LinkConverterPlugin) => {
+const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string, sourceFile: TFile, plugin: LinkConverterPlugin): string => {
     let finalLink = originalLink;
 
     if (plugin.settings.finalLinkFormat !== 'not-change') {
@@ -246,6 +247,8 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
         }
         return `[](${encodeURI(finalLink)}#${encodedBlockRef})`;
     }
+
+    return '';
 };
 
 /**
