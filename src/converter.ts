@@ -233,7 +233,7 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
     if (dest === 'wiki') {
         return `[[${decodeURI(finalLink)}${altOrBlockRef && altOrBlockRef !== '' ? '|' + altOrBlockRef : ''}]]`;
     } else if (dest === 'markdown') {
-        return `[${altOrBlockRef}](${encodeURI(finalLink)})`;
+        return `[${altOrBlockRef !== '' ? altOrBlockRef : finalLink}](${encodeURI(finalLink)})`;
     } else if (dest === 'wikiTransclusion') {
         return `[[${decodeURI(finalLink)}#${altOrBlockRef}]]`;
     } else if (dest === 'mdTransclusion') {
