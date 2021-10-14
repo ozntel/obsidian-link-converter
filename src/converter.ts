@@ -235,7 +235,7 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
     } else if (dest === 'markdown') {
         return `[${altOrBlockRef !== '' ? altOrBlockRef : finalLink}](${encodeURI(finalLink)})`;
     } else if (dest === 'wikiTransclusion') {
-        return `[[${decodeURI(finalLink)}#${altOrBlockRef}]]`;
+        return `[[${decodeURI(finalLink)}#${decodeURI(altOrBlockRef)}]]`;
     } else if (dest === 'mdTransclusion') {
         // --> To skip encoding ^
         let encodedBlockRef = altOrBlockRef;
