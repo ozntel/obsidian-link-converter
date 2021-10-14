@@ -1,6 +1,6 @@
 {
     "name": "obsidian-link-converter",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "Scan all your links in the vault and convert them to your desired format.",
     "main": "main.js",
     "scripts": {
