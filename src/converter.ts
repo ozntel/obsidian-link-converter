@@ -16,8 +16,7 @@ interface LinkMatch {
 
 const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugin): Promise<LinkMatch[]> => {
     const linkMatches: LinkMatch[] = [];
-    let normalizedPath = normalizePath(mdFile.path);
-    let fileText = await plugin.app.vault.adapter.read(normalizedPath);
+    let fileText = await plugin.app.vault.read(mdFile);
 
     // --> Get All WikiLinks
     let wikiRegex = /\[\[.*?\]\]/g;
@@ -111,7 +110,7 @@ const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugi
 // --> Converts single file to provided final format and save back in the file
 export const convertLinksAndSaveInSingleFile = async (mdFile: TFile, plugin: LinkConverterPlugin, finalFormat: 'markdown' | 'wiki') => {
     let normalizedPath = normalizePath(mdFile.path);
-    let fileText = await plugin.app.vault.adapter.read(normalizedPath);
+    let fileText = await plugin.app.vault.read(mdFile);
     let newFileText =
         finalFormat === 'markdown' ? await convertWikiLinksToMarkdown(fileText, mdFile, plugin) : await convertMarkdownLinksToWikiLinks(fileText, mdFile, plugin);
     await plugin.app.vault.adapter.write(normalizedPath, newFileText);
@@ -120,7 +119,11 @@ export const convertLinksAndSaveInSingleFile = async (mdFile: TFile, plugin: Lin
 // --> Command Function: Converts All Links and Saves in Current Active File
 export const convertLinksInActiveFile = async (plugin: LinkConverterPlugin, finalFormat: 'markdown' | 'wiki') => {
     let mdFile: TFile = plugin.app.workspace.getActiveFile();
-    await convertLinksAndSaveInSingleFile(mdFile, plugin, finalFormat);
+    if (mdFile.extension === 'md') {
+        await convertLinksAndSaveInSingleFile(mdFile, plugin, finalFormat);
+    } else {
+        new Notice('Active File is not a Markdown File');
+    }
 };
 
 // --> Command Function: Converts All Links in All Files in Vault and Save in Corresponding Files
