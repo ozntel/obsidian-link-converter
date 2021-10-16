@@ -129,14 +129,24 @@ export const convertLinksInActiveFile = async (plugin: LinkConverterPlugin, fina
 // --> Command Function: Converts All Links in All Files in Vault and Save in Corresponding Files
 export const convertLinksInVault = async (plugin: LinkConverterPlugin, finalFormat: 'markdown' | 'wiki') => {
     let mdFiles: TFile[] = plugin.app.vault.getMarkdownFiles();
-    for (let mdFile of mdFiles) {
-        // --> Skip Excalidraw and Kanban Files
-        if (hasFrontmatter(plugin.app, mdFile.path, 'excalidraw-plugin') || hasFrontmatter(plugin.app, mdFile.path, 'kanban-plugin')) {
-            continue;
+    let notice = new Notice('Starting link conversion in your vault ', 0);
+    try {
+        let totalCount = mdFiles.length;
+        let counter = 0;
+        for (let mdFile of mdFiles) {
+            counter++;
+            notice.setMessage(`Converting the links in your vault ${counter}/${totalCount}.`);
+            // --> Skip Excalidraw and Kanban Files
+            if (hasFrontmatter(plugin.app, mdFile.path, 'excalidraw-plugin') || hasFrontmatter(plugin.app, mdFile.path, 'kanban-plugin')) {
+                continue;
+            }
+            await convertLinksAndSaveInSingleFile(mdFile, plugin, finalFormat);
         }
-        await convertLinksAndSaveInSingleFile(mdFile, plugin, finalFormat);
+    } catch (err) {
+        console.log(err);
+    } finally {
+        notice.hide();
     }
-    new Notice('Conversion for all links in your vault finished.');
 };
 
 const hasFrontmatter = (app: App, filePath: string, keyToCheck: string) => {
