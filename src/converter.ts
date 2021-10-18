@@ -1,5 +1,5 @@
 import LinkConverterPlugin from 'main';
-import { App, TFile, normalizePath, Notice } from 'obsidian';
+import { App, TFile, Notice } from 'obsidian';
 
 /* -------------------- LINK DETECTOR -------------------- */
 
@@ -109,11 +109,10 @@ const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugi
 
 // --> Converts single file to provided final format and save back in the file
 export const convertLinksAndSaveInSingleFile = async (mdFile: TFile, plugin: LinkConverterPlugin, finalFormat: 'markdown' | 'wiki') => {
-    let normalizedPath = normalizePath(mdFile.path);
     let fileText = await plugin.app.vault.read(mdFile);
     let newFileText =
         finalFormat === 'markdown' ? await convertWikiLinksToMarkdown(fileText, mdFile, plugin) : await convertMarkdownLinksToWikiLinks(fileText, mdFile, plugin);
-    await plugin.app.vault.adapter.write(normalizedPath, newFileText);
+    await plugin.app.vault.modify(mdFile, newFileText);
 };
 
 // --> Command Function: Converts All Links and Saves in Current Active File
@@ -199,8 +198,7 @@ const convertMarkdownLinksToWikiLinks = async (md: string, sourceFile: TFile, pl
 /* -------------------- LINKS TO RELATIVE/ABSOLUTE/SHORTEST -------------------- */
 
 export const convertLinksInFileToPreferredFormat = async (mdFile: TFile, plugin: LinkConverterPlugin, finalFormat: FinalFormat) => {
-    let normalizedPath = normalizePath(mdFile.path);
-    let fileText = await plugin.app.vault.adapter.read(normalizedPath);
+    let fileText = await plugin.app.vault.read(mdFile);
     let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(mdFile, plugin);
     for (let linkMatch of linkMatches) {
         let fileLink = decodeURI(linkMatch.linkText);
@@ -210,7 +208,7 @@ export const convertLinksInFileToPreferredFormat = async (mdFile: TFile, plugin:
             fileText = fileText.replace(linkMatch.match, createLink(linkMatch.type, fileLink, linkMatch.altOrBlockRef, mdFile, plugin));
         }
     }
-    await plugin.app.vault.adapter.write(normalizedPath, fileText);
+    await plugin.app.vault.modify(mdFile, fileText);
 };
 
 const getFileLinkInFormat = (file: TFile, sourceFile: TFile, plugin: LinkConverterPlugin, finalFormat: FinalFormat): string => {
