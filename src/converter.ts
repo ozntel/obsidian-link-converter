@@ -234,17 +234,32 @@ const getFileLinkInFormat = (file: TFile, sourceFile: TFile, plugin: LinkConvert
 
 const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string, sourceFile: TFile, plugin: LinkConverterPlugin): string => {
     let finalLink = originalLink;
+    let altText: string;
 
-    if (plugin.settings.finalLinkFormat !== 'not-change') {
-        let fileLink = decodeURI(finalLink);
-        let file = plugin.app.metadataCache.getFirstLinkpathDest(fileLink, sourceFile.path);
-        if (file) finalLink = getFileLinkInFormat(file, sourceFile, plugin, plugin.settings.finalLinkFormat);
-    }
+    let fileLink = decodeURI(finalLink);
+    let file = plugin.app.metadataCache.getFirstLinkpathDest(fileLink, sourceFile.path);
+    if (file && plugin.settings.finalLinkFormat !== 'not-change') finalLink = getFileLinkInFormat(file, sourceFile, plugin, plugin.settings.finalLinkFormat);
 
     if (dest === 'wiki') {
-        return `[[${decodeURI(finalLink)}${altOrBlockRef !== '' && altOrBlockRef !== decodeURI(finalLink) ? '|' + altOrBlockRef : ''}]]`;
+        // If alt text is same as the final link or same as file base name, it needs to be empty
+        if (altOrBlockRef !== '' && altOrBlockRef !== decodeURI(finalLink)) {
+            if (file && decodeURI(altOrBlockRef) === file.basename) {
+                altText = '';
+            } else {
+                altText = '|' + altOrBlockRef;
+            }
+        } else {
+            altText = '';
+        }
+        return `[[${decodeURI(finalLink)}${altText}]]`;
     } else if (dest === 'markdown') {
-        return `[${altOrBlockRef !== '' ? altOrBlockRef : finalLink}](${encodeURI(finalLink)})`;
+        // If there is no alt text specifiec and file exists, the alt text needs to be always the file base name
+        if (altOrBlockRef !== '') {
+            altText = altOrBlockRef;
+        } else {
+            altText = file ? file.basename : finalLink;
+        }
+        return `[${altText}](${encodeURI(finalLink)})`;
     } else if (dest === 'wikiTransclusion') {
         return `[[${decodeURI(finalLink)}#${decodeURI(altOrBlockRef)}]]`;
     } else if (dest === 'mdTransclusion') {
