@@ -1,5 +1,5 @@
 import LinkConverterPlugin from 'main';
-import { App, TFile, Notice } from 'obsidian';
+import { App, TFile, Notice, normalizePath } from 'obsidian';
 
 /* -------------------- LINK DETECTOR -------------------- */
 
@@ -112,7 +112,8 @@ export const convertLinksAndSaveInSingleFile = async (mdFile: TFile, plugin: Lin
     let fileText = await plugin.app.vault.read(mdFile);
     let newFileText =
         finalFormat === 'markdown' ? await convertWikiLinksToMarkdown(fileText, mdFile, plugin) : await convertMarkdownLinksToWikiLinks(fileText, mdFile, plugin);
-    await plugin.app.vault.modify(mdFile, newFileText);
+    let fileStat = plugin.settings.keepMtime ? await plugin.app.vault.adapter.stat(normalizePath(mdFile.path)) : {};
+    await plugin.app.vault.modify(mdFile, newFileText, fileStat);
 };
 
 // --> Command Function: Converts All Links and Saves in Current Active File
@@ -208,7 +209,8 @@ export const convertLinksInFileToPreferredFormat = async (mdFile: TFile, plugin:
             fileText = fileText.replace(linkMatch.match, createLink(linkMatch.type, fileLink, linkMatch.altOrBlockRef, mdFile, plugin));
         }
     }
-    await plugin.app.vault.modify(mdFile, fileText);
+    let fileStat = plugin.settings.keepMtime ? await plugin.app.vault.adapter.stat(normalizePath(mdFile.path)) : {};
+    await plugin.app.vault.modify(mdFile, fileText, fileStat);
 };
 
 const getFileLinkInFormat = (file: TFile, sourceFile: TFile, plugin: LinkConverterPlugin, finalFormat: FinalFormat): string => {

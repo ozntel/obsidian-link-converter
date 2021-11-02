@@ -7,12 +7,14 @@ export interface LinkConverterPluginSettings {
     mySetting: string;
     contextMenu: boolean;
     finalLinkFormat: finalLinkFormat;
+    keepMtime: boolean;
 }
 
 export const DEFAULT_SETTINGS: LinkConverterPluginSettings = {
     mySetting: 'default',
     contextMenu: true,
     finalLinkFormat: 'not-change',
+    keepMtime: false,
 };
 
 export class LinkConverterSettingsTab extends PluginSettingTab {
@@ -60,6 +62,16 @@ export class LinkConverterSettingsTab extends PluginSettingTab {
                         this.plugin.saveSettings();
                     });
             });
+
+        new Setting(containerEl)
+            .setName('Keep mTime (Last Modified Time)')
+            .setDesc('Turn on this option if you want plugin to keep the mtime of files same during the link conversion')
+            .addToggle((toggle) =>
+                toggle.setValue(this.plugin.settings.keepMtime).onChange((value) => {
+                    this.plugin.settings.keepMtime = value;
+                    this.plugin.saveSettings();
+                })
+            );
 
         const coffeeDiv = containerEl.createDiv('coffee');
         coffeeDiv.addClass('oz-coffee-div');
