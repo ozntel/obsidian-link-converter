@@ -1,5 +1,6 @@
 import LinkConverterPlugin from 'main';
-import { App, TFile, Notice, normalizePath } from 'obsidian';
+import { App, TFile, Notice, normalizePath, TFolder } from 'obsidian';
+import { getFilesUnderPath } from './utils';
 
 /* -------------------- LINK DETECTOR -------------------- */
 
@@ -126,16 +127,16 @@ export const convertLinksInActiveFile = async (plugin: LinkConverterPlugin, fina
     }
 };
 
-// --> Command Function: Converts All Links in All Files in Vault and Save in Corresponding Files
-export const convertLinksInVault = async (plugin: LinkConverterPlugin, finalFormat: 'markdown' | 'wiki') => {
-    let mdFiles: TFile[] = plugin.app.vault.getMarkdownFiles();
-    let notice = new Notice('Starting link conversion in your vault ', 0);
+// --> Convert Links under Files under a Certain Folder
+export const convertLinksUnderFolder = async (folder: TFolder, plugin: LinkConverterPlugin, finalFormat: 'markdown' | 'wiki') => {
+    let mdFiles: TFile[] = getFilesUnderPath(folder.path, plugin);
+    let notice = new Notice('Starting link conversion', 0);
     try {
         let totalCount = mdFiles.length;
         let counter = 0;
         for (let mdFile of mdFiles) {
             counter++;
-            notice.setMessage(`Converting the links in your vault ${counter}/${totalCount}.`);
+            notice.setMessage(`Converting the links in notes ${counter}/${totalCount}.`);
             // --> Skip Excalidraw and Kanban Files
             if (hasFrontmatter(plugin.app, mdFile.path, 'excalidraw-plugin') || hasFrontmatter(plugin.app, mdFile.path, 'kanban-plugin')) {
                 continue;
@@ -147,6 +148,11 @@ export const convertLinksInVault = async (plugin: LinkConverterPlugin, finalForm
     } finally {
         notice.hide();
     }
+};
+
+// --> Command Function: Converts All Links in All Files in Vault and Save in Corresponding Files
+export const convertLinksInVault = async (plugin: LinkConverterPlugin, finalFormat: 'markdown' | 'wiki') => {
+    convertLinksUnderFolder(plugin.app.vault.getRoot(), plugin, finalFormat);
 };
 
 const hasFrontmatter = (app: App, filePath: string, keyToCheck: string) => {

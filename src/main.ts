@@ -1,6 +1,6 @@
 import { Menu, Plugin, TFile, addIcon } from 'obsidian';
 import { LinkConverterSettingsTab, LinkConverterPluginSettings, DEFAULT_SETTINGS } from './settings';
-import { ConfirmationModal } from 'modals';
+import { ConfirmationModal, FolderSuggestionModal } from 'modals';
 import * as Converter from 'converter';
 import * as Icons from './icons';
 
@@ -50,6 +50,24 @@ export default class LinkConverterPlugin extends Plugin {
                 let infoText = 'Are you sure you want to convert all Markdown Links to Wikilinks?';
                 let modal = new ConfirmationModal(this.app, infoText, () => Converter.convertLinksInVault(this, 'wiki'));
                 modal.open();
+            },
+        });
+
+        this.addCommand({
+            id: 'convert-wikis-to-mdlink-under-folder',
+            name: 'Certain Folder: Links to Markdown',
+            callback: () => {
+                let fileMoveSuggester = new FolderSuggestionModal(this, 'markdown');
+                fileMoveSuggester.open();
+            },
+        });
+
+        this.addCommand({
+            id: 'convert-mdlinks-to-wikis-under-folder',
+            name: 'Certain Folder: Links to Wiki',
+            callback: () => {
+                let fileMoveSuggester = new FolderSuggestionModal(this, 'wiki');
+                fileMoveSuggester.open();
             },
         });
 
