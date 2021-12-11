@@ -9,7 +9,7 @@ export const getFilesUnderPath = (path: string, plugin: LinkConverterPlugin): TF
         var folderObj = app.vault.getAbstractFileByPath(path);
         if (folderObj instanceof TFolder && folderObj.children) {
             for (let child of folderObj.children) {
-                if (child instanceof TFile) filesUnderPath.push(child);
+                if (child instanceof TFile && child.extension === 'md') filesUnderPath.push(child);
                 if (child instanceof TFolder) recursiveFx(child.path, app);
             }
         }
