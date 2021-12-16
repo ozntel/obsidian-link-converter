@@ -1,5 +1,5 @@
 import LinkConverterPlugin from 'main';
-import { App, TFile, Notice, normalizePath, TFolder } from 'obsidian';
+import { App, TFile, Notice, normalizePath, TFolder, MarkdownView } from 'obsidian';
 import { getFilesUnderPath } from './utils';
 
 /* -------------------- LINK DETECTOR -------------------- */
@@ -147,6 +147,29 @@ export const convertLinksUnderFolder = async (folder: TFolder, plugin: LinkConve
         console.log(err);
     } finally {
         notice.hide();
+    }
+};
+
+// --> Convert Links within editor Selection
+export const convertLinksWithinSelection = async (finalFormat: 'markdown' | 'wiki', plugin: LinkConverterPlugin) => {
+    let activeLeaf = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeLeaf) {
+        let editor = activeLeaf.editor;
+        let selection = editor.getSelection();
+        let sourceFile = activeLeaf.file;
+        if (selection !== '') {
+            let newText: string;
+            if (finalFormat === 'markdown') {
+                newText = await convertWikiLinksToMarkdown(selection, sourceFile, plugin);
+            } else if (finalFormat === 'wiki') {
+                newText = await convertMarkdownLinksToWikiLinks(selection, sourceFile, plugin);
+            }
+            editor.replaceSelection(newText);
+        } else {
+            new Notice("You didn't select any text.");
+        }
+    } else {
+        new Notice('There is no active leaf open.', 3000);
     }
 };
 

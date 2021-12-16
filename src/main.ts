@@ -71,6 +71,18 @@ export default class LinkConverterPlugin extends Plugin {
             },
         });
 
+        this.addCommand({
+            id: 'convert-wikis-to-mdlinks-within-selection',
+            name: 'Editor Selection: Links to Markdown',
+            callback: async () => Converter.convertLinksWithinSelection('markdown', this),
+        });
+
+        this.addCommand({
+            id: 'convert-mdlinks-to-wiki-within-selection',
+            name: 'Editor Selection: Links to Wiki',
+            callback: async () => Converter.convertLinksWithinSelection('wiki', this),
+        });
+
         if (this.settings.contextMenu) this.app.workspace.on('file-menu', this.addFileMenuItems);
     }
 
