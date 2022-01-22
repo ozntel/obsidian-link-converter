@@ -271,6 +271,9 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
     let file = plugin.app.metadataCache.getFirstLinkpathDest(fileLink, sourceFile.path);
     if (file && plugin.settings.finalLinkFormat !== 'not-change') finalLink = getFileLinkInFormat(file, sourceFile, plugin, plugin.settings.finalLinkFormat);
 
+    // If final link is in markdown format and the file is md, the extension should be included
+    const fileExtension = file && file.extension === 'md' ? `.${file.extension}` : '';
+
     if (dest === 'wiki') {
         // If alt text is same as the final link or same as file base name, it needs to be empty
         if (altOrBlockRef !== '' && altOrBlockRef !== decodeURI(finalLink)) {
@@ -290,7 +293,7 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
         } else {
             altText = file ? file.basename : finalLink;
         }
-        return `[${altText}](${encodeURI(finalLink)})`;
+        return `[${altText}](${encodeURI(finalLink)}${fileExtension})`;
     } else if (dest === 'wikiTransclusion') {
         return `[[${decodeURI(finalLink)}#${decodeURI(altOrBlockRef)}]]`;
     } else if (dest === 'mdTransclusion') {
@@ -302,7 +305,7 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
         } else {
             encodedBlockRef = encodeURI(encodedBlockRef);
         }
-        return `[](${encodeURI(finalLink)}#${encodedBlockRef})`;
+        return `[](${encodeURI(finalLink)}${fileExtension}#${encodedBlockRef})`;
     }
 
     return '';
