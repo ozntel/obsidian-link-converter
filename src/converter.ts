@@ -293,23 +293,33 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
         } else {
             altText = file ? file.basename : finalLink;
         }
-        return `[${altText}](${encodeURI(finalLink)}${fileExtension})`;
+        return `[${altText}](${customEncodeURI(finalLink)}${fileExtension})`;
     } else if (dest === 'wikiTransclusion') {
         return `[[${decodeURI(finalLink)}#${decodeURI(altOrBlockRef)}]]`;
     } else if (dest === 'mdTransclusion') {
         // --> To skip encoding ^
         let encodedBlockRef = altOrBlockRef;
         if (altOrBlockRef.startsWith('^')) {
-            encodedBlockRef = encodeURI(encodedBlockRef.slice(1));
+            encodedBlockRef = customEncodeURI(encodedBlockRef.slice(1));
             encodedBlockRef = `^${encodedBlockRef}`;
         } else {
-            encodedBlockRef = encodeURI(encodedBlockRef);
+            encodedBlockRef = customEncodeURI(encodedBlockRef);
         }
-        return `[](${encodeURI(finalLink)}${fileExtension}#${encodedBlockRef})`;
+        return `[](${customEncodeURI(finalLink)}${fileExtension}#${encodedBlockRef})`;
     }
 
     return '';
 };
+
+/**
+ * Encode URI the same way Obsidian is doing it internally
+ * 
+ * @param uri 
+ * @returns 
+ */
+function customEncodeURI(uri: string): string {
+    return uri.replace(/[\\\x00\x08\x0B\x0C\x0E-\x1F ]/g, urlPart => encodeURIComponent(urlPart));
+}
 
 /**
  *
