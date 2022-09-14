@@ -20,7 +20,7 @@ const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugi
     let fileText = await plugin.app.vault.read(mdFile);
 
     // --> Get All WikiLinks
-    let wikiRegex = /\[\[.*?\]\]/g;
+    let wikiRegex = /\[\[[^\]]*?\]\]/g;
     let wikiMatches = fileText.match(wikiRegex);
 
     if (wikiMatches) {
@@ -63,7 +63,7 @@ const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugi
     }
 
     // --> Get All Markdown Links
-    let markdownRegex = /\[(^$|.*?)\]\((.*?)\)/g;
+    let markdownRegex = /\[([^\]]*?)\]\(([^)]*?)\)/g;
     let markdownMatches = fileText.match(markdownRegex);
 
     if (markdownMatches) {
@@ -357,11 +357,11 @@ function getRelativeLink(sourceFilePath: string, linkedFilePath: string) {
 
 /* -------------------- TRANSCLUSIONS -------------------- */
 
-const wikiTransclusionRegex = /\[\[(.*?)#.*?\]\]/;
+const wikiTransclusionRegex = /\[\[([^\]]*?)#.*?\]\]/;
 const wikiTransclusionFileNameRegex = /(?<=\[\[)(.*)(?=#)/;
 const wikiTransclusionBlockRef = /(?<=#).*?(?=]])/;
 
-const mdTransclusionRegex = /\[.*?]\((.*?)#.*?\)/;
+const mdTransclusionRegex = /\[[^\]]*?]\(([^)]*?)#[^\)]*?\)/;
 const mdTransclusionFileNameRegex = /(?<=\]\()(.*)(?=#)/;
 const mdTransclusionBlockRef = /(?<=#).*?(?=\))/;
 
