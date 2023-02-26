@@ -359,7 +359,8 @@ function getRelativeLink(sourceFilePath: string, linkedFilePath: string) {
 
 const wikiTransclusionRegex = /\[\[(.*?)#.*?\]\]/;
 const wikiTransclusionFileNameRegex = /(?<=\[\[)(.*)(?=#)/;
-const wikiTransclusionBlockRef = /(?<=#).*?(?=]])/;
+const wikiTransclusionBlockRef = /(?<=#).*?(?=]])/;     // wiki links without alt texts
+const wikiTransclusionBlockRefAlt = /(?<=#).*?(?=\|)/;  // wiki links with alt texts 
 
 const mdTransclusionRegex = /\[.*?]\((.*?)#.*?\)/;
 const mdTransclusionFileNameRegex = /(?<=\]\()(.*)(?=#)/;
@@ -395,8 +396,14 @@ const getTransclusionBlockRef = (match: string) => {
     let isWiki = wikiTransclusionRegex.test(match);
     let isMd = mdTransclusionRegex.test(match);
     if (isWiki || isMd) {
-        let blockRefMatch = match.match(isWiki ? wikiTransclusionBlockRef : mdTransclusionBlockRef);
-        if (blockRefMatch) return blockRefMatch[0];
+        let blockRefMatch = match.match(isWiki ? wikiTransclusionBlockRefAlt : mdTransclusionBlockRef);
+        if (blockRefMatch) {
+            return blockRefMatch[0];
+        } else if (isWiki) { 
+            // Wiki links without alt texts
+            blockRefMatch = match.match(wikiTransclusionBlockRef);
+            if (blockRefMatch) return blockRefMatch[0];
+        }
     }
     return '';
 };
