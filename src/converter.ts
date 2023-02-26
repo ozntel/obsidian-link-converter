@@ -11,7 +11,8 @@ interface LinkMatch {
     type: LinkType;
     match: string;
     linkText: string;
-    altOrBlockRef: string;
+    blockRef: string;
+    alt: string;
     sourceFilePath: string;
 }
 
@@ -32,12 +33,14 @@ const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugi
             if (matchIsWikiTransclusion(wikiMatch)) {
                 let fileName = getTransclusionFileName(wikiMatch);
                 let blockRefMatch = getTransclusionBlockRef(wikiMatch);
+                let altMatch = wikiMatch.match(altRegex);
                 if (fileName !== '' && blockRefMatch !== '') {
                     let linkMatch: LinkMatch = {
                         type: 'wikiTransclusion',
                         match: wikiMatch,
                         linkText: fileName,
-                        altOrBlockRef: blockRefMatch,
+                        blockRef: blockRefMatch,
+                        alt: altMatch ? altMatch[0] : '',
                         sourceFilePath: mdFile.path,
                     };
                     linkMatches.push(linkMatch);
@@ -54,7 +57,8 @@ const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugi
                     type: 'wiki',
                     match: wikiMatch,
                     linkText: fileMatch[0],
-                    altOrBlockRef: altMatch ? altMatch[0] : '',
+                    blockRef: '',
+                    alt: altMatch ? altMatch[0] : '',
                     sourceFilePath: mdFile.path,
                 };
                 linkMatches.push(linkMatch);
@@ -74,12 +78,14 @@ const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugi
             if (matchIsMdTransclusion(markdownMatch)) {
                 let fileName = getTransclusionFileName(markdownMatch);
                 let blockRefMatch = getTransclusionBlockRef(markdownMatch);
+                let altMatch = markdownMatch.match(altRegex);
                 if (fileName !== '' && blockRefMatch !== '') {
                     let linkMatch: LinkMatch = {
                         type: 'mdTransclusion',
                         match: markdownMatch,
                         linkText: fileName,
-                        altOrBlockRef: blockRefMatch,
+                        blockRef: blockRefMatch,
+                        alt: altMatch ? altMatch[0] : '',
                         sourceFilePath: mdFile.path,
                     };
                     linkMatches.push(linkMatch);
@@ -96,7 +102,8 @@ const getAllLinkMatchesInFile = async (mdFile: TFile, plugin: LinkConverterPlugi
                     type: 'markdown',
                     match: markdownMatch,
                     linkText: fileMatch[0],
-                    altOrBlockRef: altMatch ? altMatch[0] : '',
+                    blockRef: '',
+                    alt: altMatch ? altMatch[0] : '',
                     sourceFilePath: mdFile.path,
                 };
                 linkMatches.push(linkMatch);
@@ -192,13 +199,13 @@ export const convertWikiLinksToMarkdown = async (md: string, sourceFile: TFile, 
     // --> Convert Wiki Internal Links to Markdown Link
     let wikiMatches = linkMatches.filter((match) => match.type === 'wiki');
     for (let wikiMatch of wikiMatches) {
-        let mdLink = createLink('markdown', wikiMatch.linkText, wikiMatch.altOrBlockRef, sourceFile, plugin);
+        let mdLink = createLink('markdown', wikiMatch.linkText, wikiMatch.blockRef, wikiMatch.alt, sourceFile, plugin);
         newMdText = newMdText.replace(wikiMatch.match, mdLink);
     }
     // --> Convert Wiki Transclusion Links to Markdown Transclusion
     let wikiTransclusions = linkMatches.filter((match) => match.type === 'wikiTransclusion');
     for (let wikiTransclusion of wikiTransclusions) {
-        let wikiTransclusionLink = createLink('mdTransclusion', wikiTransclusion.linkText, wikiTransclusion.altOrBlockRef, sourceFile, plugin);
+        let wikiTransclusionLink = createLink('mdTransclusion', wikiTransclusion.linkText, wikiTransclusion.blockRef, wikiTransclusion.alt, sourceFile, plugin);
         newMdText = newMdText.replace(wikiTransclusion.match, wikiTransclusionLink);
     }
     return newMdText;
@@ -213,13 +220,13 @@ const convertMarkdownLinksToWikiLinks = async (md: string, sourceFile: TFile, pl
     // --> Convert Markdown Internal Links to WikiLink
     let markdownMatches = linkMatches.filter((match) => match.type === 'markdown');
     for (let markdownMatch of markdownMatches) {
-        let wikiLink = createLink('wiki', markdownMatch.linkText, markdownMatch.altOrBlockRef, sourceFile, plugin);
+        let wikiLink = createLink('wiki', markdownMatch.linkText, markdownMatch.blockRef, markdownMatch.alt, sourceFile, plugin);
         newMdText = newMdText.replace(markdownMatch.match, wikiLink);
     }
     // --> Convert Markdown Transclusion Links to WikiLink Transclusion
     let mdTransclusions = linkMatches.filter((match) => match.type === 'mdTransclusion');
     for (let mdTransclusion of mdTransclusions) {
-        let wikiTransclusionLink = createLink('wikiTransclusion', mdTransclusion.linkText, mdTransclusion.altOrBlockRef, sourceFile, plugin);
+        let wikiTransclusionLink = createLink('wikiTransclusion', mdTransclusion.linkText, mdTransclusion.blockRef, mdTransclusion.alt, sourceFile, plugin);
         newMdText = newMdText.replace(mdTransclusion.match, wikiTransclusionLink);
     }
     return newMdText;
@@ -235,7 +242,7 @@ export const convertLinksInFileToPreferredFormat = async (mdFile: TFile, plugin:
         let file = plugin.app.metadataCache.getFirstLinkpathDest(fileLink, linkMatch.sourceFilePath);
         if (file) {
             fileLink = getFileLinkInFormat(file, mdFile, plugin, finalFormat);
-            fileText = fileText.replace(linkMatch.match, createLink(linkMatch.type, fileLink, linkMatch.altOrBlockRef, mdFile, plugin));
+            fileText = fileText.replace(linkMatch.match, createLink(linkMatch.type, fileLink, linkMatch.blockRef, linkMatch.alt, mdFile, plugin));
         }
     }
     let fileStat = plugin.settings.keepMtime ? await plugin.app.vault.adapter.stat(normalizePath(mdFile.path)) : {};
@@ -263,7 +270,7 @@ const getFileLinkInFormat = (file: TFile, sourceFile: TFile, plugin: LinkConvert
 
 /* -------------------- HELPERS -------------------- */
 
-const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string, sourceFile: TFile, plugin: LinkConverterPlugin): string => {
+const createLink = (dest: LinkType, originalLink: string, blockRef: string, alt: string, sourceFile: TFile, plugin: LinkConverterPlugin): string => {
     let finalLink = originalLink;
     let altText: string;
 
@@ -276,11 +283,11 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
 
     if (dest === 'wiki') {
         // If alt text is same as the final link or same as file base name, it needs to be empty
-        if (altOrBlockRef !== '' && altOrBlockRef !== decodeURI(finalLink)) {
-            if (file && decodeURI(altOrBlockRef) === file.basename) {
+        if (alt !== '' && alt !== decodeURI(finalLink)) {
+            if (file && decodeURI(alt) === file.basename) {
                 altText = '';
             } else {
-                altText = '|' + altOrBlockRef;
+                altText = '|' + alt;
             }
         } else {
             altText = '';
@@ -288,24 +295,24 @@ const createLink = (dest: LinkType, originalLink: string, altOrBlockRef: string,
         return `[[${decodeURI(finalLink)}${altText}]]`;
     } else if (dest === 'markdown') {
         // If there is no alt text specifiec and file exists, the alt text needs to be always the file base name
-        if (altOrBlockRef !== '') {
-            altText = altOrBlockRef;
+        if (alt !== '') {
+            altText = alt;
         } else {
             altText = file ? file.basename : finalLink;
         }
         return `[${altText}](${encodeURI(finalLink)}${fileExtension})`;
     } else if (dest === 'wikiTransclusion') {
-        return `[[${decodeURI(finalLink)}#${decodeURI(altOrBlockRef)}]]`;
+        return `[[${decodeURI(finalLink)}#${decodeURI(blockRef)}|${alt}]]`;
     } else if (dest === 'mdTransclusion') {
         // --> To skip encoding ^
-        let encodedBlockRef = altOrBlockRef;
-        if (altOrBlockRef.startsWith('^')) {
+        let encodedBlockRef = blockRef;
+        if (blockRef.startsWith('^')) {
             encodedBlockRef = encodeURI(encodedBlockRef.slice(1));
             encodedBlockRef = `^${encodedBlockRef}`;
         } else {
             encodedBlockRef = encodeURI(encodedBlockRef);
         }
-        return `[](${encodeURI(finalLink)}${fileExtension}#${encodedBlockRef})`;
+        return `[${alt}](${encodeURI(finalLink)}${fileExtension}#${encodedBlockRef})`;
     }
 
     return '';
@@ -359,7 +366,8 @@ function getRelativeLink(sourceFilePath: string, linkedFilePath: string) {
 
 const wikiTransclusionRegex = /\[\[(.*?)#.*?\]\]/;
 const wikiTransclusionFileNameRegex = /(?<=\[\[)(.*)(?=#)/;
-const wikiTransclusionBlockRef = /(?<=#).*?(?=]])/;
+const wikiTransclusionBlockRef = /(?<=#).*?(?=]])/;     // wiki links without alt texts
+const wikiTransclusionBlockRefAlt = /(?<=#).*?(?=\|)/;  // wiki links with alt texts 
 
 const mdTransclusionRegex = /\[.*?]\((.*?)#.*?\)/;
 const mdTransclusionFileNameRegex = /(?<=\]\()(.*)(?=#)/;
@@ -395,8 +403,14 @@ const getTransclusionBlockRef = (match: string) => {
     let isWiki = wikiTransclusionRegex.test(match);
     let isMd = mdTransclusionRegex.test(match);
     if (isWiki || isMd) {
-        let blockRefMatch = match.match(isWiki ? wikiTransclusionBlockRef : mdTransclusionBlockRef);
-        if (blockRefMatch) return blockRefMatch[0];
+        let blockRefMatch = match.match(isWiki ? wikiTransclusionBlockRefAlt : mdTransclusionBlockRef);
+        if (blockRefMatch) {
+            return blockRefMatch[0];
+        } else if (isWiki) { 
+            // Wiki links without alt texts
+            blockRefMatch = match.match(wikiTransclusionBlockRef);
+            if (blockRefMatch) return blockRefMatch[0];
+        }
     }
     return '';
 };
